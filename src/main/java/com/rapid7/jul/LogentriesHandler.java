@@ -1,9 +1,15 @@
 package com.rapid7.jul;
 
 import com.rapid7.net.AsyncLogger;
+import com.rapid7.net.LoggerConfiguration;
 
 import java.text.MessageFormat;
-import java.util.logging.*;
+import java.util.logging.Formatter;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.LogRecord;
+import java.util.logging.SimpleFormatter;
 
 import static java.util.logging.ErrorManager.FORMAT_FAILURE;
 import static java.util.logging.ErrorManager.GENERIC_FAILURE;
@@ -13,62 +19,41 @@ public class LogentriesHandler extends Handler {
     /**
      * Asynchronous Background logger
      */
-    AsyncLogger iopsAsync;
+    final AsyncLogger iopsAsync;
 
     public LogentriesHandler() {
         this(null);
     }
 
     public LogentriesHandler(String prefix) {
-        iopsAsync = new AsyncLogger();
-        configure(prefix);
+        iopsAsync = new AsyncLogger(loadConfiguration(prefix));
     }
 
-    void configure(String prefix) {
+    private LoggerConfiguration loadConfiguration(String prefix) {
         String cname = getClass().getName();
         String propsPrefix = prefix == null ? cname : prefix + "." + cname;
         setLevel(getLevelProperty(propsPrefix + ".level", Level.INFO));
         setFormatter(getFormatterProperty(propsPrefix + ".formatter", new SimpleFormatter()));
-        setRegion(getStringProperty(propsPrefix + ".region", ""));
-        setHost(getStringProperty(propsPrefix + ".host", null));
-        setPort(getIntProperty(propsPrefix + ".port", 0));
-        setToken(getStringProperty(propsPrefix + ".token", ""));
-        setUseDataHub(getBooleanProperty(propsPrefix + ".useDataHub", false));
-        setHttpPut(getBooleanProperty(propsPrefix + ".httpPut", false));
-        setSsl(getBooleanProperty(propsPrefix + ".ssl", true));
+        return new LoggerConfiguration.Builder()
+                .inRegion(getStringProperty(propsPrefix + ".region", ""))
+                .toServerAddress(getStringProperty(propsPrefix + ".host", null))
+                .toServerPort(getIntProperty(propsPrefix + ".port", 0))
+                .useToken(getStringProperty(propsPrefix + ".token", ""))
+                .useDataHub(getBooleanProperty(propsPrefix + ".useDataHub", false))
+                .useHttpPut(getBooleanProperty(propsPrefix + ".httpPut", false))
+                .useAccountKey(getStringProperty(propsPrefix + ".key", ""))
+                .httpPutLocation(getStringProperty(propsPrefix + ".location", ""))
+                .runInDebugMode(getBooleanProperty(propsPrefix + ".debug", false))
+                .logHostNameAsPrefix(getBooleanProperty(propsPrefix + ".logHostName", false))
+                .useAsHostName(getStringProperty(propsPrefix + ".hostNameToLog", ""))
+                .setLogIdPrefix(getStringProperty(propsPrefix + ".logId", ""))
+                .useSSL(getBooleanProperty(propsPrefix + ".ssl", true))
+                .build();
     }
 
-    private void setUseDataHub(boolean useDataHub) {
-        iopsAsync.setUseDataHub(useDataHub);
-    }
-
-    private void setRegion(String region) {
-        iopsAsync.setRegion(region);
-    }
-
-
-    private void setHost(String host) {
-        iopsAsync.setDataHubAddr(host);
-    }
-
-    private void setPort(int port) {
-        iopsAsync.setDataHubPort(port);
-    }
-
-    private void setToken(String token) {
-        iopsAsync.setToken(token);
-    }
-
-    public void setSsl(boolean ssl) {
-        this.iopsAsync.setSsl(ssl);
-    }
-
-    public void setHttpPut(boolean httpPut) {
-        this.iopsAsync.setHttpPut(httpPut);
-    }
 
     @Override
-    public void publish(LogRecord record) {
+    public synchronized void publish(LogRecord record) {
         if (isLoggable(record)) {
             this.iopsAsync.addLineToQueue(formatMessage(record));
         }
@@ -142,13 +127,14 @@ public class LogentriesHandler extends Handler {
         if (val == null) {
             return defaultValue;
         }
-        try {
-            return Boolean.parseBoolean(val.trim());
-        } catch (NumberFormatException e) {
-            reportError(MessageFormat.format("Error reading property ''{0}''", name), e, GENERIC_FAILURE);
+        if ("false".equalsIgnoreCase(val.trim())) {
+            return false;
+        } else if ("true".equalsIgnoreCase(val.trim())) {
+            return true;
+        } else {
+            reportError(MessageFormat.format("Error reading property ''{0}''", name), null, GENERIC_FAILURE);
             return defaultValue;
         }
-
     }
 
     int getIntProperty(String name, int defaultValue) {
