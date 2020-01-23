@@ -16,7 +16,7 @@
     <name>r7insight_java</name>
     <version>3.0.3-SNAPSHOT</version>
     <description>Contains logback, log4j, and log4j2 appenders that will send log data to Logentries</description>
-    <url>https://github.com/rapid7/r7insight_java</url>
+    <url>https://github.com/maquilanti-r7/r7insight_java</url>
     <licenses>
         <license>
             <name>MIT License</name>
@@ -25,9 +25,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git@github.com:rapid7/r7insight_java.git</connection>
-        <developerConnection>scm:git:git@github.com:rapid7/r7insight_java.git</developerConnection>
-        <url>https://github.com/rapid7/r7insight_java</url>
+        <connection>scm:git:git@github.com:maquilanti-r7/r7insight_java.git</connection>
+        <developerConnection>scm:git:git@github.com:maquilanti-r7/r7insight_java.git</developerConnection>
+        <url>https://github.com/maquilanti-r7/r7insight_java</url>
       <tag>HEAD</tag>
   </scm>
     <developers>
