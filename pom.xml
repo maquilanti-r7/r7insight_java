@@ -15,7 +15,7 @@
     <artifactId>r7insight_java</artifactId>
     <packaging>jar</packaging>
     <name>r7insight_java</name>
-    <version>3.0.3</version>
+    <version>3.0.3-SNAPSHOT</version>
     <description>Contains logback, log4j, and log4j2 appenders that will send log data to Logentries</description>
     <url>https://github.com/maquilanti-r7/r7insight_java</url>
     <licenses>
